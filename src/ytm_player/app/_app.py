@@ -90,6 +90,13 @@ def _read_theme_toml_cached() -> dict:
         return {}
 
 
+def _get_ytm_commands_provider():
+    """Lazy-load the custom YTM command provider to avoid circular imports."""
+    from ytm_player.app._commands import YTMCommandProvider
+
+    return YTMCommandProvider
+
+
 # ── Main Application ────────────────────────────────────────────────
 
 
@@ -181,18 +188,21 @@ class YTMPlayerApp(
     # We handle all bindings ourselves through the KeyMap system.
     BINDINGS = []
 
+    # Register custom command palette providers alongside Textual's defaults.
+    COMMANDS = App.COMMANDS | {_get_ytm_commands_provider}
+
     def __init__(self) -> None:
         super().__init__()
 
-        # Register custom YTM theme and set as default.
+        # Register custom YTM theme and set the configured default.
         from ytm_player.ui.theme import YTM_DARK
 
         self.register_theme(YTM_DARK)
-        self.theme = "ytm-dark"
 
         # Configuration.
         self.settings: Settings = get_settings()
         self.keymap: KeyMap = get_keymap()
+        self.theme = self.settings.ui.theme or "ytm-dark"
         self.theme_colors: ThemeColors = get_theme()
 
         # Services (initialized in on_mount).
@@ -369,6 +379,25 @@ class YTMPlayerApp(
             self.theme_colors = tc
         except Exception:
             pass
+
+    def action_set_current_theme_as_default(self) -> None:
+        """Persist the active runtime theme as the config.toml default."""
+        previous_theme = self.settings.ui.theme
+        current_theme = str(self.theme)
+        self.settings.ui.theme = current_theme
+        try:
+            self.settings.save()
+        except OSError:
+            self.settings.ui.theme = previous_theme
+            logger.exception("Failed to save default theme to config.toml")
+            self.notify(
+                "Could not save default theme to config.toml",
+                severity="error",
+                timeout=5,
+            )
+            return
+
+        self.notify(f"Saved {current_theme} as default theme", timeout=3)
 
     # ── Crash diagnostics ────────────────────────────────────────────
 

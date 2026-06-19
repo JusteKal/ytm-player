@@ -71,7 +71,6 @@ class CacheSettings:
 class UISettings:
     theme: str = "ytm-dark"
     album_art: bool = True
-    border_style: str = "rounded"
     progress_style: str = "block"
     sidebar_width: int = 30
     col_index: int = 4

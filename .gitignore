@@ -49,3 +49,6 @@ v*-changelog.html
 pr*-changelog-diff.html
 *-ux-mockup.html
 broad-except-audit.local.md
+
+# Local website-brainstorm scratch (not part of the package)
+.superpowers/

@@ -24,6 +24,7 @@ Every section is optional — anything you don't set falls back to defaults.
 ```toml
 [general]
 startup_page = "library"     # library, search, browse
+playback_bar_position = "bottom"  # "bottom" or "top"
 brand_account_id = ""        # YouTube Brand Account ID (21-digit; find at myaccount.google.com/brandaccounts)
 check_for_updates = true     # check PyPI once per 24h, surface a one-time toast on new version
 ```
@@ -33,8 +34,10 @@ check_for_updates = true     # check PyPI once per 24h, surface a one-time toast
 ```toml
 [playback]
 audio_quality = "high"       # high, medium, low
+prefer_audio = true          # prefer audio-only streams over video (audio uses less bandwidth)
 default_volume = 80          # 0-100
 autoplay = true              # auto-play next on track end
+gapless = true               # preload the next track for gapless transitions
 seek_step = 5                # seconds per +/- seek
 api_timeout = 15             # seconds for ytmusicapi calls before failover
 resume_on_launch = true      # restore last-playing track + position on app start; press space to continue
@@ -49,6 +52,7 @@ resume_on_launch = true      # restore last-playing track + position on app star
 enabled = true
 max_size_mb = 1024           # 1GB default LRU audio cache
 prefetch_next = true         # resolve next track's stream URL in background for instant skip
+location = ""                # blank = default cache dir; set a path to override
 ```
 
 ### `[yt_dlp]`
@@ -56,8 +60,19 @@ prefetch_next = true         # resolve next track's stream URL in background for
 ```toml
 [yt_dlp]
 cookies_file = ""            # Optional: path to yt-dlp Netscape cookies.txt
+ca_bundle = ""               # Optional: path to a custom CA cert bundle for SSL-inspecting
+                             # corporate proxies (Zscaler, Netskope, etc.)
 remote_components = ""       # Optional: ejs:npm/ejs:github (enables remote JS component downloads)
 js_runtimes = ""             # Optional: bun, bun:/path/to/bun, node, quickjs, etc.
+```
+
+### `[search]`
+
+```toml
+[search]
+default_mode = "music"       # "music" (songs only) or "all" (all result types)
+max_history = 500            # number of past search queries to remember
+predictive = true            # show search suggestions as you type
 ```
 
 ### `[ui]`
@@ -70,14 +85,15 @@ progress_style = "block"     # block or line
 sidebar_width = 30
 col_index = 4                # 0 = auto-fill width
 col_title = 0                # 0 = auto-fill
-col_artist = 30
-col_album = 25
+col_artist = 0               # 0 = auto-fill
+col_album = 0                # 0 = auto-fill
 col_duration = 8
 bidi_mode = "auto"           # auto, reorder, passthrough — RTL text handling
 region = "ZZ"                # ISO 3166-1 alpha-2 (or "ZZ" = Global, default) — Browse → Charts. 68 regions selectable; locale-style codes like "ES-ES" auto-normalise to "ES".
 home_shelves = 3             # number of recommendation shelves on Browse → For You (1–25)
 show_selection_info = true   # show focused-item full name in the row above the playback bar
 sidebar_overflow = "truncate"  # "truncate" (1-row + ellipsis) or "wrap" (multi-line names)
+show_queue_source = true     # show "Generated from: …" header on radio/discovery queues
 ```
 
 `theme` is the startup default. Changing theme from Textual's command palette (`Ctrl+P` → `Theme`) updates the current session and is saved in `session.json`, not `config.toml`. To make the active theme the new default, run `Ctrl+P` → `Set Current Theme as Default`.
@@ -93,6 +109,7 @@ in `config.toml` for it.
 [notifications]
 enabled = true
 timeout_seconds = 5
+format = "{title} — {artist}"  # template for the now-playing notification body
 ```
 
 ### `[mpris]`
@@ -111,6 +128,14 @@ client_id = ""               # blank uses the bundled app; set your own
                              # Discord application ID to publish under it
 ```
 
+### `[lyrics]`
+
+```toml
+[lyrics]
+transliteration = false      # transliterate non-Latin lyrics to ASCII (requires
+                             # `pip install ytm-player[transliteration]`)
+```
+
 ### `[lastfm]`
 
 ```toml
@@ -126,9 +151,10 @@ username = ""
 
 ```toml
 [logging]
-level = "INFO"               # DEBUG, INFO, WARNING, ERROR
-max_bytes = 1048576          # 1 MB per log file before rotation
-backup_count = 5             # number of rotated logs to keep
+level = "WARNING"            # DEBUG, INFO, WARNING, ERROR, CRITICAL
+max_bytes = 5242880          # 5 MB per log file before rotation
+backup_count = 3             # number of rotated logs to keep
+keep_crashes = 10            # max number of crash files to retain in crashes/
 ```
 
 ## `theme.toml`

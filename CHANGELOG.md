@@ -8,17 +8,37 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ### v1.9.4 (2026-06-19)
 
+A broad release: community playlist and context-menu features, a batch of crash fixes across macOS, Windows, and Nix, and Discord Rich Presence working again.
+
 **New features**
 
-- **Create playlist with metadata** — the "New Playlist" flow now asks for name, description, and privacy (Private / Public / Unlisted) in a single modal, instead of defaulting to private with no description. New `CreatePlaylistPopup` replaces the minimal `InputPopup`.
-- **Edit playlist metadata** — right-click any user playlist in the sidebar and choose "Edit Playlist" to rename it, update its description, or change privacy. The sidebar and the open library page header update in-place without reloading tracks. New `YTMusicService.edit_playlist()` method.
-- **Enriched library playlist header** — description, privacy status, and year now appear in the header alongside owner and track count. Uses new `build_playlist_subtitle()` helper.
-- **Sidebar count sync on add** — adding tracks via the "Add to Playlist" picker now bumps the target playlist's track count in the sidebar immediately.
-- **Auto-navigate on delete** — deleting the currently open playlist from the sidebar automatically navigates back to the plain library view instead of leaving a ghost page.
+- **Create playlist with metadata** — the "New Playlist" flow now asks for name, description, and privacy (Private / Public / Unlisted) in a single modal, instead of defaulting to private with no description. New `CreatePlaylistPopup` replaces the minimal `InputPopup`. Thanks @Villoh (#79).
+- **Edit playlist metadata** — right-click any user playlist in the sidebar and choose "Edit Playlist" to rename it, update its description, or change privacy. The sidebar and the open library header update in place without reloading tracks. Thanks @Villoh (#79).
+- **Enriched library playlist header** — description, privacy status, and year now appear in the header alongside owner and track count. Thanks @Villoh (#79).
+- **Sidebar count sync on add** — adding tracks via the "Add to Playlist" picker bumps the target playlist's track count in the sidebar immediately, and duplicate adds prompt before re-adding. Thanks @Villoh (#79).
+- **Auto-navigate on delete** — deleting the currently open playlist from the sidebar returns you to the plain library view instead of leaving a ghost page. Thanks @Villoh (#79).
+- **Remove a track from a playlist** — the track action menu now offers "Remove from Playlist" when viewing one of your playlists, removing the track in place. Thanks @Villoh (#79).
+- **Entity action consolidation** — context menu actions (Play All, Shuffle Play, Add to Queue, Start Radio, Go to Artist, Subscribe) now work consistently for albums, playlists, and artists across all dispatch sites: sidebar, search results, track table column right-click, context page, library page, and browse page. "Shuffle Play" pre-shuffles for a one-time random order without enabling ongoing shuffle. "Play All" / "Shuffle Play" from sidebar and search start playback immediately and jump to the queue. Thanks @wgordon17 (#81).
+- **Column-aware context menus** — right-clicking the Artist column opens artist actions (Go to Artist, Play Top Songs, Start Radio, Subscribe); the Album column opens album actions (Play All, Shuffle Play, Add to Queue, Go to Artist). Multi-artist tracks show a picker first. Thanks @wgordon17 (#81).
+- **Corporate SSL proxy support** — set `ca_bundle` under `[yt_dlp]` to a custom CA certificate bundle so stream resolution works behind SSL-inspecting proxies (Zscaler, Netskope, etc.). A warning is logged if the path doesn't exist. Thanks @glywil (#98).
+- **Richer Discord Rich Presence** — the now-playing status shows the track's album art (falling back to the app icon), displays as *Listening to YouTube Music*, and includes elapsed time. Thanks @Wiibleyde (#103).
 
 **Fixes**
 
+- **Discord Rich Presence connects again** — the bundled application ID had been rejected by Discord, so presence never appeared. Registered a fresh app and made the ID configurable via `[discord] client_id` for anyone who wants to use their own. Reported by @Villoh (#88).
+- **Crash setting ANSI themes** — selecting `ansi-dark` / `ansi-light` (added in Textual 8.2.5) crashed the app because their colour tokens like `ansi_cyan` aren't parseable by Rich. They're now translated to the bare ANSI names. Thanks @dmnmsc (#89).
+- **mpv not found with Homebrew installs** — on macOS and Linuxbrew, libmpv lives outside the default library search path, so a non-brew Python (uv tool, pipx, distro) couldn't load it even though `mpv` was on PATH. ytm now searches the Homebrew prefixes, and `ytm doctor` reports libmpv loadability on its own line (#90, #101, #104).
+- **Crash on Windows with the `mpris` extra** — `dbus-fast` is Linux-only and raised an uncaught error at import; the extra is now marked Linux-only and the import is platform-gated, so `uv sync --all-extras` elsewhere degrades gracefully instead of crashing at startup. Thanks @Villoh (#106).
 - **Spotify import builds on Nix again** — the `spotifyscraper` derivation no longer fails on a sandboxed `pip install` during the build, so flake builds with the `spotify` extra work again. Thanks @peternaame-boop for both causing and fixing it (#93).
+- **Nix flake: missing `packaging` dependency** — the update checker crashed on flake builds because `packaging` wasn't declared. Now included, with an import check so it can't regress. Thanks @szx19970521 (#95, #105).
+
+**Infrastructure**
+
+- **Faster Nix installs** — the nixpkgs pin now points at a cached channel revision, so flake users download prebuilt dependencies instead of compiling them (notably Deno, pulled in by yt-dlp) from source.
+
+**Docs**
+
+- Install and troubleshooting docs now reference `dbus-fast` instead of the obsolete `dbus-next` (the code migrated in v1.9.3). Thanks @aaguilar-hub (#99).
 
 ### v1.9.3 (2026-05-04)
 
@@ -31,8 +51,6 @@ A small follow-up release: two crash fixes caught by manual smoke after v1.9.2, 
 - **Discovery round-robin** — `D` now cycles deterministically through Charts → Trending → For You → Liked → Artist → Recently Played (was random source selection). Charts sub-rotates through its shelves between presses, and the Discovery label shows the active source (e.g. `Discovery (US Daily Top 100)`). Mood source dropped (the Moods & Genres tab was removed in v1.9.1 due to upstream crashes). Thanks @wgordon17 (#75).
 - **Radio queues prepend their seed tracks** — radio playback now starts with the seed before suggestions, matching YouTube Music's native behaviour. Append-mode background refill is unchanged. Thanks @wgordon17 (#75).
 - **Persistent queue source header** — Queue page shows `Generated from: …` beneath Now Playing for radio and discovery queues, with up to three seed titles inline and a tooltip for the full list. Toggle via `[ui] show_queue_source` (default on). Thanks @wgordon17 (#75).
-- **Entity action consolidation** — context menu actions (Play All, Shuffle Play, Add to Queue, Start Radio, Go to Artist, Subscribe) now work consistently for albums, playlists, and artists across all dispatch sites: sidebar, search results, track table column right-click, context page, library page, and browse page. "Shuffle Play" pre-shuffles the track list for a one-time random order without enabling ongoing shuffle mode. "Play All" and "Shuffle Play" from sidebar and search start playback immediately and navigate to the queue page (#81).
-- **Column-aware context menus** — right-clicking the Artist column opens artist-specific actions (Go to Artist, Play Top Songs, Start Radio, Subscribe); right-clicking the Album column opens album actions (Play All, Shuffle Play, Add to Queue, Go to Artist). Multi-artist tracks show a picker first. All other columns open the standard track menu (#81).
 
 **Fixes**
 

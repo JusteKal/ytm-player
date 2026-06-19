@@ -16,6 +16,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 - **Sidebar count sync on add** — adding tracks via the "Add to Playlist" picker now bumps the target playlist's track count in the sidebar immediately.
 - **Auto-navigate on delete** — deleting the currently open playlist from the sidebar automatically navigates back to the plain library view instead of leaving a ghost page.
 
+**Fixes**
+
+- **Spotify import builds on Nix again** — the `spotifyscraper` derivation no longer fails on a sandboxed `pip install` during the build, so flake builds with the `spotify` extra work again. Thanks @peternaame-boop for both causing and fixing it (#93).
+
 ### v1.9.3 (2026-05-04)
 
 A small follow-up release: two crash fixes caught by manual smoke after v1.9.2, two CLI/utility fixes, plus three community PRs.

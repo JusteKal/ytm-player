@@ -6,7 +6,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ---
 
-## [Unreleased]
+### v1.9.4 (2026-06-19)
 
 **New features**
 

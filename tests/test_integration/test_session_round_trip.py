@@ -75,6 +75,7 @@ def _build_session_host():
     h._pending_resume_video_id = None
     h._pending_resume_position = 0.0
     h._first_run_hint_shown = False
+    h._mpris_hint_shown = False
     h.theme = "ytm-dark"
 
     # Override _get_transliteration_state so save serialises a clean bool

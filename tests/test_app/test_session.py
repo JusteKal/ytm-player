@@ -36,6 +36,7 @@ def _fresh_session_host():
     h._pending_resume_video_id = None
     h._pending_resume_position = 0.0
     h._first_run_hint_shown = False
+    h._mpris_hint_shown = False
     return h
 
 
@@ -214,6 +215,39 @@ class TestSaveSessionResumeGuard:
         assert written["resume"] is not None
         assert written["resume"]["video_id"] == "abc"
         assert written["resume"]["position"] == 42.5
+
+
+class TestMprisHintFlag:
+    """The 'install dbus-fast' hint must show once, then persist (#110)."""
+
+    async def test_restore_reads_saved_flag(self, tmp_path, monkeypatch):
+        h = _fresh_session_host()
+        good = tmp_path / "session.json"
+        good.write_text('{"schema_version": 1, "mpris_hint_shown": true}', encoding="utf-8")
+        monkeypatch.setattr("ytm_player.config.paths.SESSION_STATE_FILE", good, raising=False)
+        await h._restore_session_state()
+        assert h._mpris_hint_shown is True
+
+    async def test_restore_defaults_false_when_absent(self, tmp_path, monkeypatch):
+        h = _fresh_session_host()
+        good = tmp_path / "session.json"
+        good.write_text('{"schema_version": 1}', encoding="utf-8")
+        monkeypatch.setattr("ytm_player.config.paths.SESSION_STATE_FILE", good, raising=False)
+        await h._restore_session_state()
+        assert h._mpris_hint_shown is False
+
+    def test_save_persists_flag(self, tmp_path, monkeypatch):
+        h = _save_session_host(tmp_path)
+        h._mpris_hint_shown = True
+        target = tmp_path / "session.json"
+        monkeypatch.setattr("ytm_player.config.paths.SESSION_STATE_FILE", target, raising=False)
+
+        h._save_session_state()
+
+        import json
+
+        written = json.loads(target.read_text(encoding="utf-8"))
+        assert written["mpris_hint_shown"] is True
 
 
 class TestSaveSessionFailureVisibility:

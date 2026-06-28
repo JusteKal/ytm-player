@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+import sys
 from pathlib import Path
+
+import pytest
 
 
 class TestGatherDiagnosticsExisting:
@@ -43,6 +46,7 @@ class TestGatherDiagnosticsV2:
         assert "=== ytm-player diagnostics ===" in report
         assert "=== Paths ===" in report
         assert "=== Process status ===" in report
+        assert "=== MPRIS / media keys ===" in report
         assert "=== Recent ERROR/WARNING (last 20) ===" in report
         assert "=== Recent mpv warnings/errors ===" in report
         assert "=== Most recent faulthandler trace ===" in report
@@ -57,6 +61,7 @@ class TestGatherDiagnosticsV2:
             "=== ytm-player diagnostics ===",
             "=== Paths ===",
             "=== Process status ===",
+            "=== MPRIS / media keys ===",
             "=== Recent ERROR/WARNING (last 20) ===",
             "=== Recent mpv warnings/errors ===",
             "=== Most recent faulthandler trace ===",
@@ -188,6 +193,37 @@ class TestCrashStaleness:
         from ytm_player.utils.doctor import _crash_staleness_note
 
         assert _crash_staleness_note("=== Crash ===\nversion: unknown\ntrace", "1.9.4") is None
+
+
+class TestMprisStatus:
+    """MPRIS section must tell Linux users when dbus-fast is missing (#110)."""
+
+    @pytest.mark.skipif(sys.platform != "linux", reason="Linux-only MPRIS path")
+    def test_unavailable_reports_fix(self, monkeypatch):
+        import ytm_player.services.mpris as mpris_mod
+        from ytm_player.utils.doctor import _mpris_status
+
+        monkeypatch.setattr(mpris_mod, "DBUS_AVAILABLE", False)
+        status = _mpris_status()
+        assert "UNAVAILABLE" in status
+        assert "dbus-fast" in status
+        assert "ytm-player[mpris]" in status
+
+    @pytest.mark.skipif(sys.platform != "linux", reason="Linux-only MPRIS path")
+    def test_available_reports_bus_name(self, monkeypatch):
+        import ytm_player.services.mpris as mpris_mod
+        from ytm_player.utils.doctor import _mpris_status
+
+        monkeypatch.setattr(mpris_mod, "DBUS_AVAILABLE", True)
+        status = _mpris_status()
+        assert "available" in status
+        assert mpris_mod.BUS_NAME in status
+
+    @pytest.mark.skipif(sys.platform == "linux", reason="non-Linux native-integration path")
+    def test_non_linux_is_not_applicable(self):
+        from ytm_player.utils.doctor import _mpris_status
+
+        assert "n/a" in _mpris_status()
 
     def test_no_note_for_invalid_version_string(self):
         from ytm_player.utils.doctor import _crash_staleness_note

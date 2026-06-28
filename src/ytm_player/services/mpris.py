@@ -273,6 +273,12 @@ except (ImportError, ValueError):
     logger.debug("MPRIS D-Bus interfaces unavailable (dbus-fast incompatible)", exc_info=True)
 
 
+# Public, read-after-import view of whether MPRIS can run in this install. Other
+# modules (app startup hint, `ytm doctor`) check this to tell the user when the
+# `mpris` extra (dbus-fast) is missing instead of silently degrading.
+DBUS_AVAILABLE = _DBUS_AVAILABLE
+
+
 class MPRISService:
     """Manages the MPRIS D-Bus presence for ytm-player."""
 

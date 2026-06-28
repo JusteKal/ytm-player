@@ -1,10 +1,10 @@
 """Diagnostic gathering for the `ytm doctor` command.
 
 Produces a single-string report users can paste directly into a GitHub
-issue. v2 covers eight sections so every failure class is visible:
-version, paths, process status, recent ERROR/WARNING, recent mpv
-warnings, faulthandler trace, last crash file, active hooks. All
-output passes through a redaction layer so auth tokens never leak.
+issue. It covers every failure class: version, paths, process status,
+MPRIS / media keys, recent ERROR/WARNING, recent mpv warnings,
+faulthandler trace, last crash file, active hooks. All output passes
+through a redaction layer so auth tokens never leak.
 """
 
 from __future__ import annotations
@@ -71,6 +71,28 @@ def _libmpv_status() -> str:
         return f"libmpv: NOT LOADABLE ({first.strip()})"
     except ImportError:
         return "libmpv: OK"
+
+
+def _mpris_status() -> str:
+    """Report whether MPRIS (playerctl / media keys) can run on this install.
+
+    MPRIS needs the optional ``mpris`` extra (dbus-fast). When it's missing the
+    TUI runs without D-Bus controls and playerctl finds no player (#110), so
+    surface the gap and the fix here. doctor runs in its own process, so this
+    reflects dependency availability — not whether the live TUI currently holds
+    the bus name.
+    """
+    if sys.platform != "linux":
+        return f"MPRIS: n/a ({platform.system()} uses its native media integration)"
+    from ytm_player.services.mpris import BUS_NAME, DBUS_AVAILABLE
+
+    if DBUS_AVAILABLE:
+        return f"MPRIS: available (dbus-fast OK; registers as {BUS_NAME})"
+    return (
+        "MPRIS: UNAVAILABLE — dbus-fast not installed, so playerctl / media keys "
+        "won't work. Fix: pip install 'ytm-player[mpris]' "
+        "(or: pipx inject ytm-player dbus-fast)"
+    )
 
 
 def _running_status() -> str:
@@ -242,6 +264,10 @@ def gather_diagnostics() -> str:
     sections.append("")
     sections.append("=== Process status ===")
     sections.append(_running_status())
+
+    sections.append("")
+    sections.append("=== MPRIS / media keys ===")
+    sections.append(_mpris_status())
 
     sections.append("")
     sections.append("=== Recent ERROR/WARNING (last 20) ===")

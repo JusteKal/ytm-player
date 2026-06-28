@@ -20,6 +20,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 **Diagnostics**
 
 - **Crash files self-identify, and `ytm doctor` flags stale crashes** — every crash log now records the app version, time, Python, and platform it was written under, and `ytm doctor` warns when the most recent crash predates the installed version (or predates version stamping). A stale, already-fixed crash from an older build no longer reads as a live bug.
+- **`playerctl` / media keys no longer fail silently** — these need the optional `dbus-fast` dependency (the `mpris` extra). When it's missing on a desktop session, ytm-player now shows a one-time notice on startup explaining how to install it, and `ytm doctor` reports MPRIS availability. Previously the integration just did nothing with no hint why. Thanks for the report @pironha2 (#110).
 
 ---
 

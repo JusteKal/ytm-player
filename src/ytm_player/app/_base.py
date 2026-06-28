@@ -126,6 +126,7 @@ if TYPE_CHECKING:
 
         # ── Onboarding state ───────────────────────────────────────────
         _first_run_hint_shown: bool
+        _mpris_hint_shown: bool
 
         # ── Cross-mixin method declarations ────────────────────────────
         # Each mixin is analyzed by Pyright in isolation, so calls to

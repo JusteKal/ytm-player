@@ -94,6 +94,7 @@ class SessionMixin(YTMHostBase):
         # Restore first-run hint flag — defaults False so legacy session.json
         # files (or fresh installs) trigger the toast on first launch.
         self._first_run_hint_shown = bool(state.get("first_run_hint_shown", False))
+        self._mpris_hint_shown = bool(state.get("mpris_hint_shown", False))
 
         # Restore transliteration toggle state (session overrides config).
         if "transliteration_enabled" in state:
@@ -194,6 +195,7 @@ class SessionMixin(YTMHostBase):
             "transliteration_enabled": self._get_transliteration_state(),
             "theme": self.theme,
             "first_run_hint_shown": self._first_run_hint_shown,
+            "mpris_hint_shown": self._mpris_hint_shown,
         }
         try:
             import os

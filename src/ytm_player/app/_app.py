@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import os
 import sys
 from pathlib import Path
 from typing import Any
@@ -36,7 +37,7 @@ from ytm_player.services.download import DownloadService
 from ytm_player.services.history import HistoryManager
 from ytm_player.services.lastfm import LastFMService
 from ytm_player.services.mediakeys import MediaKeysService
-from ytm_player.services.mpris import MPRISService
+from ytm_player.services.mpris import DBUS_AVAILABLE, MPRISService
 from ytm_player.services.player import Player, PlayerEvent
 from ytm_player.services.queue import QueueManager
 from ytm_player.services.shuffle_prefs import ShufflePreferences
@@ -287,6 +288,11 @@ class YTMPlayerApp(
         # the toast fires; persisted via session.json so the hint shows
         # exactly once per install.
         self._first_run_hint_shown: bool = False
+
+        # Shown once per install when MPRIS is enabled but dbus-fast is missing,
+        # so playerctl users learn they need the `mpris` extra instead of facing
+        # a silent no-op (#110). Persisted via session.json.
+        self._mpris_hint_shown: bool = False
 
     def get_css_variables(self) -> dict[str, str]:
         """Inject app-specific CSS variables alongside Textual's theme variables.
@@ -585,9 +591,24 @@ class YTMPlayerApp(
         # Start MPRIS if enabled (Linux only — dbus-fast is Linux-only, and
         # macOS/Windows have their own media integrations below).
         if sys.platform == "linux" and self.settings.mpris.enabled:
-            self.mpris = MPRISService()
-            callbacks = self._build_mpris_callbacks()
-            await self.mpris.start(callbacks)
+            if DBUS_AVAILABLE:
+                self.mpris = MPRISService()
+                callbacks = self._build_mpris_callbacks()
+                await self.mpris.start(callbacks)
+            elif not self._mpris_hint_shown and os.environ.get("DBUS_SESSION_BUS_ADDRESS"):
+                # Enabled by default but the dep is optional — without it MPRIS
+                # silently no-ops, so playerctl/media keys appear broken (#110).
+                # Tell the user once how to enable it. Gate on an actual D-Bus
+                # session bus: headless / SSH / server users have none, can't use
+                # MPRIS or playerctl anyway, and shouldn't be nagged.
+                self._mpris_hint_shown = True
+                self.notify(
+                    "playerctl / media keys disabled: install dbus-fast — "
+                    "pip install 'ytm-player[mpris]' "
+                    "(or: pipx inject ytm-player dbus-fast)",
+                    severity="warning",
+                    timeout=10,
+                )
 
         # Start media key listener on Windows (MPRIS handles Linux).
         if sys.platform == "win32" and self.settings.mpris.enabled:

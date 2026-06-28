@@ -155,7 +155,12 @@ class BrowseTabBar(Widget):
 
     DEFAULT_CSS = """
     BrowseTabBar {
-        height: 4;
+        /* height 5 = 1 top-padding row + the height:3 tab (top border / text /
+           bottom border) + 1 row for this bar's border-bottom. At height 4 the
+           tab was squeezed into 2 rows, so its text could never reach a true
+           middle — it sat against whichever border row survived the clip. Do
+           not drop this back to 4: it reintroduces the off-centre label. */
+        height: 5;
         width: 1fr;
         padding: 1 1 0 1;
         background: $surface;
@@ -174,6 +179,12 @@ class BrowseTabBar(Widget):
         height: 3;
         content-align: center middle;
         color: $text-muted;
+        /* Reserve BOTH border rows in every state so the label always sits on
+           the single middle row. Per-state rules below only recolour these
+           already-reserved rows — they never add/remove a row, so the text
+           stays vertically centred whether the tab is plain, active, or
+           focused. (A `tall transparent` border occupies its row invisibly.) */
+        border-top: tall transparent;
         border-bottom: tall transparent;
     }
 

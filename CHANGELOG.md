@@ -16,11 +16,11 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 **Changes**
 
 - **Queue track reorder moved off `Tab`** — reordering the selected track now uses `Shift+J` / `Shift+K` (lowercase `j`/`k` move the cursor, as on every other page). It honours a count prefix, so `15 J` moves the selected track down 15 positions in one step. This frees `Tab` / `Shift+Tab` on the Queue page for section navigation.
+- **`playerctl` / media keys / now-playing work out of the box on Linux** — the `dbus-fast` library that MPRIS needs now ships by default on Linux instead of behind an optional `[mpris]` extra, so a standard `pip install ytm-player` (or AUR / Nix install) exposes `playerctl`, hardware media keys, and desktop now-playing controls with no extra steps. `ytm doctor` reports MPRIS status and a one-time startup notice flags a broken or incomplete install, so the previous silent no-op can't recur. Thanks for the report @pironha2 (#110).
 
 **Diagnostics**
 
 - **Crash files self-identify, and `ytm doctor` flags stale crashes** — every crash log now records the app version, time, Python, and platform it was written under, and `ytm doctor` warns when the most recent crash predates the installed version (or predates version stamping). A stale, already-fixed crash from an older build no longer reads as a live bug.
-- **`playerctl` / media keys no longer fail silently** — these need the optional `dbus-fast` dependency (the `mpris` extra). When it's missing on a desktop session, ytm-player now shows a one-time notice on startup explaining how to install it, and `ytm doctor` reports MPRIS availability. Previously the integration just did nothing with no hint why. Thanks for the report @pironha2 (#110).
 
 ---
 

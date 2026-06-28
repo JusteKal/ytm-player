@@ -207,7 +207,7 @@ class TestMprisStatus:
         status = _mpris_status()
         assert "UNAVAILABLE" in status
         assert "dbus-fast" in status
-        assert "ytm-player[mpris]" in status
+        assert "reinstall" in status.lower()
 
     @pytest.mark.skipif(sys.platform != "linux", reason="Linux-only MPRIS path")
     def test_available_reports_bus_name(self, monkeypatch):

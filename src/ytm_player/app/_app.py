@@ -289,9 +289,10 @@ class YTMPlayerApp(
         # exactly once per install.
         self._first_run_hint_shown: bool = False
 
-        # Shown once per install when MPRIS is enabled but dbus-fast is missing,
-        # so playerctl users learn they need the `mpris` extra instead of facing
-        # a silent no-op (#110). Persisted via session.json.
+        # Shown once per install if dbus-fast is missing despite being a Linux
+        # core dependency — i.e. a broken/partial install. Surfaces it instead
+        # of the silent playerctl/media-key no-op it used to cause (#110).
+        # Persisted via session.json.
         self._mpris_hint_shown: bool = False
 
     def get_css_variables(self) -> dict[str, str]:
@@ -596,16 +597,17 @@ class YTMPlayerApp(
                 callbacks = self._build_mpris_callbacks()
                 await self.mpris.start(callbacks)
             elif not self._mpris_hint_shown and os.environ.get("DBUS_SESSION_BUS_ADDRESS"):
-                # Enabled by default but the dep is optional — without it MPRIS
-                # silently no-ops, so playerctl/media keys appear broken (#110).
-                # Tell the user once how to enable it. Gate on an actual D-Bus
-                # session bus: headless / SSH / server users have none, can't use
-                # MPRIS or playerctl anyway, and shouldn't be nagged.
+                # dbus-fast is a Linux core dependency, so reaching here means a
+                # broken/partial install (the library is missing despite being
+                # required). Flag it once instead of letting playerctl/media keys
+                # silently no-op (#110). Gate on a real D-Bus session bus:
+                # headless / SSH / server users have none, can't use MPRIS
+                # anyway, and shouldn't be nagged.
                 self._mpris_hint_shown = True
                 self.notify(
-                    "playerctl / media keys disabled: install dbus-fast — "
-                    "pip install 'ytm-player[mpris]' "
-                    "(or: pipx inject ytm-player dbus-fast)",
+                    "playerctl / media keys unavailable: this install is "
+                    "missing dbus-fast (a Linux core dependency). Reinstall "
+                    "ytm-player to fix — run `ytm doctor` for details.",
                     severity="warning",
                     timeout=10,
                 )

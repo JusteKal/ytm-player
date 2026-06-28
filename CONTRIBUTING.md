@@ -10,7 +10,7 @@ git clone https://github.com/peternaame-boop/ytm-player.git
 cd ytm-player
 python -m venv .venv
 source .venv/bin/activate
-pip install -e ".[spotify,mpris,discord,lastfm,transliteration,dev]"
+pip install -e ".[spotify,discord,lastfm,transliteration,dev]"
 pre-commit install
 ```
 

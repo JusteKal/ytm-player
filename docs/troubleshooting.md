@@ -47,19 +47,27 @@ List available devices with `mpv --audio-device=help`.
 
 ## MPRIS / media keys not working (Linux)
 
-Install the optional MPRIS dependency:
+MPRIS (`playerctl`, hardware media keys, desktop now-playing) ships by default on
+Linux. If it isn't working, check these in order:
 
-```bash
-pip install -e ".[mpris]"
-# or, on Arch:
-sudo pacman -S python-dbus-fast
-```
-
-Requires D-Bus (standard on most Linux desktops). Verify with:
-
-```bash
-dbus-send --session --print-reply --dest=org.freedesktop.DBus /org/freedesktop/DBus org.freedesktop.DBus.ListNames
-```
+1. **Are you in a desktop session?** MPRIS needs a running D-Bus *session* bus —
+   it won't work over plain SSH, in a bare container, or on a headless box.
+   Verify one exists:
+   ```bash
+   dbus-send --session --print-reply --dest=org.freedesktop.DBus /org/freedesktop/DBus org.freedesktop.DBus.ListNames
+   ```
+2. **Run `ytm doctor`.** The `MPRIS / media keys` line reports whether `dbus-fast`
+   is present and the bus name ytm registers under.
+3. **If `ytm doctor` reports `dbus-fast` missing,** your install is incomplete
+   (it's a core dependency on Linux, so this is unusual — typically a partial or
+   stale install). Reinstall:
+   ```bash
+   pip install --force-reinstall ytm-player
+   # pipx:
+   pipx reinstall ytm-player
+   # fallback — pull just the library:
+   pipx inject ytm-player dbus-fast
+   ```
 
 ## Cache taking too much space
 

@@ -10,7 +10,8 @@ ytm-player is a YouTube Music TUI client built with Python 3.10+ and [Textual](h
 
 ```bash
 # Install (editable, all features + dev tools)
-pip install -e ".[spotify,mpris,discord,lastfm,transliteration,dev]"
+# (dbus-fast / MPRIS is a core Linux dep now — no longer an extra)
+pip install -e ".[spotify,discord,lastfm,transliteration,dev]"
 
 # Run the TUI
 ytm

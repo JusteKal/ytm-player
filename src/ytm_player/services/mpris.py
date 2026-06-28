@@ -16,10 +16,12 @@ logger = logging.getLogger(__name__)
 
 # dbus-fast is Linux-only: it calls socket.CMSG_LEN at import time, which
 # raises AttributeError on Windows (and dbus is meaningless on macOS, which
-# uses the native Now Playing integration). Gate the import on the platform
-# so a stray install of the `mpris` extra elsewhere — e.g. via
-# `uv sync --all-extras` — degrades gracefully instead of crashing the whole
-# app at startup (#106). Linux import failures still surface via the except.
+# uses the native Now Playing integration). It's a Linux-only core dependency
+# (sys_platform marker keeps it off other OSes), but gate the import on the
+# platform anyway so a stray off-Linux install — e.g. a manual
+# `pip install dbus-fast` or a resolver that ignores markers — degrades
+# gracefully instead of crashing the whole app at startup (#106). Linux import
+# failures still surface via the except.
 if sys.platform == "linux":
     try:
         from dbus_fast import Variant  # type: ignore[reportMissingImports]
@@ -274,8 +276,8 @@ except (ImportError, ValueError):
 
 
 # Public, read-after-import view of whether MPRIS can run in this install. Other
-# modules (app startup hint, `ytm doctor`) check this to tell the user when the
-# `mpris` extra (dbus-fast) is missing instead of silently degrading.
+# modules (app startup hint, `ytm doctor`) check this to tell the user when
+# dbus-fast (a Linux core dependency) is missing instead of silently degrading.
 DBUS_AVAILABLE = _DBUS_AVAILABLE
 
 

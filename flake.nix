@@ -98,19 +98,25 @@
           # Remove the PyPI name so pythonRuntimeDepsCheck doesn't fail.
           pythonRemoveDeps = [ "python-mpv" ];
 
-          dependencies = with python.pkgs; [
-            textual
-            ytmusicapi
-            yt-dlp
-            mpv            # provides python-mpv (dist-info Name: mpv)
-            aiosqlite
-            click
-            pillow         # album art (moved from optional to core in v1.3.1)
-            packaging
-          ];
+          dependencies =
+            (with python.pkgs; [
+              textual
+              ytmusicapi
+              yt-dlp
+              mpv            # provides python-mpv (dist-info Name: mpv)
+              aiosqlite
+              click
+              pillow         # album art (moved from optional to core in v1.3.1)
+              packaging
+            ])
+            # dbus-fast powers Linux MPRIS (playerctl / media keys / now-playing).
+            # Core dep on Linux so MPRIS works out of the box; Linux-only because
+            # it can't import on darwin (socket.CMSG_LEN), matching the pyproject
+            # sys_platform marker.
+            ++ pkgs.lib.optionals pkgs.stdenv.isLinux [ python.pkgs.dbus-fast ];
 
           optional-dependencies = with python.pkgs; {
-            mpris = [ dbus-fast ];
+            mpris = [ ];  # dbus-fast moved to core deps (Linux-only); kept for compat
             images = [ ];  # Pillow moved to core deps; kept for compat
             discord = [ pypresence ];
             lastfm = [ pylast ];
@@ -184,7 +190,6 @@
               ruff
 
               # Include all optional deps in the dev shell
-              dbus-fast
               pillow
               pypresence
               pylast
@@ -193,6 +198,9 @@
               thefuzz
               anyascii
             ])
+            # dbus-fast is Linux-only (socket.CMSG_LEN); guard it so `nix develop`
+            # still works on darwin.
+            ++ pkgs.lib.optionals pkgs.stdenv.isLinux [ python.pkgs.dbus-fast ]
             ++ [
               pkgs.mpv
             ];

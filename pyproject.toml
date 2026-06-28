@@ -40,6 +40,12 @@ dependencies = [
     "pyobjc-framework-Quartz>=11.0; sys_platform == 'darwin'",
     "tomli>=2.0; python_version < '3.11'",
     "typing_extensions>=4.4; python_version < '3.11'",
+    # dbus-fast powers Linux MPRIS (playerctl, hardware media keys, desktop
+    # now-playing). It's a core dep so MPRIS works out of the box. The
+    # sys_platform marker keeps it off macOS/Windows, where it can't even
+    # import (socket.CMSG_LEN) and which use their own media integrations
+    # (#106, #110).
+    "dbus-fast>=4.0.0; sys_platform == 'linux'",
 ]
 
 [project.optional-dependencies]
@@ -48,12 +54,7 @@ spotify = [
     "spotifyscraper>=2.0.0",
     "thefuzz>=0.22.0",
 ]
-mpris = [
-    # dbus-fast is Linux-only (imports socket.CMSG_LEN). The marker keeps it
-    # out of the resolved set on macOS/Windows so `--all-extras` there can't
-    # install a library that crashes the app at import (#106).
-    "dbus-fast>=4.0.0; sys_platform == 'linux'",
-]
+mpris = []  # dbus-fast is now a Linux core dependency; kept for backwards compat.
 images = []  # Pillow is now a default dependency; kept for backwards compat.
 discord = [
     "pypresence>=4.3.0",

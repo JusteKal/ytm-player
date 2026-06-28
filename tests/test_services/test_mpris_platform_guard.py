@@ -3,7 +3,7 @@
 dbus-fast is Linux-only — on Windows it raises AttributeError at import
 (socket.CMSG_LEN). Because app/_app.py imports MPRISService unconditionally,
 importing ytm_player.services.mpris must never pull in dbus_fast off Linux,
-regardless of whether the `mpris` extra was accidentally installed.
+regardless of whether dbus-fast is present in the environment.
 
 These tests force sys.platform in a fresh subprocess interpreter so the
 module's platform gate runs as it would on the target OS, without poisoning

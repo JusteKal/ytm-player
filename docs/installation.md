@@ -125,15 +125,19 @@ pip install -e .
 
 ## Optional extras
 
+> **Linux MPRIS / media keys ship by default.** The `dbus-fast` library MPRIS
+> needs is a core dependency on Linux, so `playerctl`, hardware media keys, and
+> desktop now-playing controls work out of the box — no extra to install. (The
+> `[mpris]` extra still exists but is empty, kept only for backward compatibility.)
+
 ### pip
 
 ```bash
 pip install "ytm-player[spotify]"          # Spotify playlist import
-pip install "ytm-player[mpris]"            # Linux media key support (D-Bus)
 pip install "ytm-player[discord]"          # Discord Rich Presence
 pip install "ytm-player[lastfm]"           # Last.fm scrobbling
 pip install "ytm-player[transliteration]"  # Non-Latin lyric → ASCII
-pip install "ytm-player[spotify,mpris,discord,lastfm,transliteration]"  # all
+pip install "ytm-player[spotify,discord,lastfm,transliteration]"  # all
 pip install -e ".[dev]"                    # Development tools (pytest, ruff)
 ```
 
@@ -142,11 +146,13 @@ pip install -e ".[dev]"                    # Development tools (pytest, ruff)
 If you installed via AUR, install optional dependencies with pacman/yay — **not** pip (Arch enforces [PEP 668](https://peps.python.org/pep-0668/)):
 
 ```bash
-sudo pacman -S python-dbus-fast            # MPRIS media keys
 yay -S python-pylast                       # Last.fm scrobbling
 yay -S python-pypresence                   # Discord Rich Presence
 yay -S python-spotipy python-thefuzz       # Spotify playlist import
 ```
+
+(`python-dbus-fast` is a hard dependency of the AUR package, so MPRIS / media
+keys are pulled in automatically — no separate install needed.)
 
 ## Windows Setup
 
